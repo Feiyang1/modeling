@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Union, List, Optional
 import re
-from models import Word2VecParams
+from params import Word2VecParams
 from collections import Counter, OrderedDict
 
 

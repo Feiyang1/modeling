@@ -2,3 +2,5 @@ torch
 torchtext
 torchdata
 portalocker>=2.0.0
+tqdm
+scipy
