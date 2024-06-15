@@ -61,6 +61,17 @@ class Trainer:
             )
             self._validate_epoch()
 
+            # save checkpoint
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state_dict": self.model.state_dict(),
+                    "optimizer_state_dict": self.optimizer.state_dict(),
+                    "loss": self.loss["train"][-1],
+                },
+                f"checkpoints/checkpoint_{epoch}.pt",
+            )
+
             print(
                 f"""Epoch: {epoch+1}/{self.params.N_EPOCHS}\n""",
                 f"""    Train Loss: {self.loss['train'][-1]:.2}\n""",
