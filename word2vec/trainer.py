@@ -37,7 +37,14 @@ class Trainer:
         self.negative_sampler = NegativeSampler(
             vocab, ns_exponent=0.75, ns_array_len=self.params.NS_ARRAY_LEN
         )
-        self.testwords = ["love", "hurricane", "military", "army"]
+        self.testwords = [
+            "love",
+            "hurricane",
+            "military",
+            "army",
+            "google",
+            "china",
+        ]
 
     def train(self):
         for epoch in tqdm.tqdm(range(self.params.N_EPOCHS), "EPOCH"):
@@ -143,7 +150,7 @@ class Trainer:
 
                 preds = self.model(inputs, context).to(self.params.DEVICE)
                 loss = self.params.CRITERION(preds, y)
-                running_loss.append(loss)
+                running_loss.append(loss.item())
 
             epoch_loss = np.mean(running_loss)
             self.loss["valid"].append(epoch_loss)
