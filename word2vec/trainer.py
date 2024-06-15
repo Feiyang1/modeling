@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 import torch
 from time import monotonic
 import numpy as np
+import tqdm
 
 
 class Trainer:
@@ -39,7 +40,7 @@ class Trainer:
         self.testwords = ["love", "hurricane", "military", "army"]
 
     def train(self):
-        for epoch in range(self.params.N_EPOCHS):
+        for epoch in tqdm.tqdm(range(self.params.N_EPOCHS), "EPOCH"):
             self.train_dataloader = DataLoader(
                 self.train_iter,
                 batch_size=self.params.BATCH_SIZE,
@@ -85,7 +86,9 @@ class Trainer:
         self.model.train()
         running_loss = []
 
-        for i, batch_data in enumerate(self.train_dataloader, 1):
+        for i, batch_data in enumerate(
+            tqdm.tqdm(self.train_dataloader, "BATCHES"), 1
+        ):
             if len(batch_data[0]) == 0:
                 continue
 
