@@ -3,7 +3,9 @@ from params import Word2VecParams
 from vocab import Vocab
 from preprocessing import SkipGrams, NegativeSampler
 from torch.utils.data import DataLoader
+import torch
 from time import monotonic
+import numpy as np
 
 
 class Trainer:
@@ -81,3 +83,61 @@ class Trainer:
             neg_labels = self.negative_sampler.sample(
                 pos_labels.shape[0], self.params.NEG_SAMPLES
             )
+            neg_labels = neg_labels.to(self.params.DEVICE)
+            context = torch.cat(
+                [pos_labels.view(pos_labels.shape[0], 1), neg_labels], dim=1
+            )
+
+            # building the target tensor
+            y_pos = torch.ones((pos_labels.shape[0], 1))
+            y_neg = torch.zeros((neg_labels.shape[0], neg_labels.shape[1]))
+            y = torch.cat([y_pos, y_neg], dim=1).to(self.params.DEVICE)
+
+            self.optimizer.zero_grad()
+            outputs = self.model(inputs, context)  # batch * context size
+            loss = self.params.CRITERION(outputs, y)
+            loss.backward()
+            self.optimizer.step()
+            running_loss.append(loss.item())
+
+        epoch_loss = np.mean(running_loss)
+        self.loss["train"].append(epoch_loss)
+
+    def _validate_epoch(self):
+        self.model.eval()
+        running_loss = []
+
+        with torch.no_grad():
+            for i, batch_data in enumerate(self.valid_dataLoader, 1):
+                if len(batch_data[0]) == 0:
+                    continue
+
+                inputs = batch_data[0].to(self.params.DEVICE)
+                pos_labels = batch_data[1].to(self.params.DEVICE)
+                neg_labels = self.negative_sampler.sample(
+                    pos_labels.shape[0], self.params.NEG_SAMPLES
+                ).to(self.params.DEVICE)
+
+                context = torch.cat(
+                    [pos_labels.view(pos_labels.shape[0], 1), neg_labels], dim=1
+                )
+
+                # building the target tensor
+                y_pos = torch.ones((pos_labels.shape[0], 1))
+                y_neg = torch.zeros((neg_labels.shape[0], neg_labels.shape[1]))
+                y = torch.cat([y_pos, y_neg], dim=1).to(self.params.DEVICE)
+
+                preds = self.model(inputs, context).to(self.params.DEVICE)
+                loss = self.params.CRITERION(preds, y)
+                running_loss.append(loss)
+
+            epoch_loss = np.mean(running_loss)
+            self.loss["valid"].append(epoch_loss)
+
+    def test_testwords(self, n: int = 5):
+        for word in self.testwords:
+            print(word)
+            nn_words = self.model.get_similar_words(word, n)
+            for w, sim in nn_words.items():
+                print(f"{w} ({sim:.3})", end=" ")
+            print("\n")

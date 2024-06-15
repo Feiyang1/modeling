@@ -7,7 +7,7 @@ from scipy.spatial.distance import cosine
 
 class Model(nn.Module):
     def __init__(self, vocab: Vocab, params: Word2VecParams):
-        super.__init__()
+        super().__init__()
         self.vocab = vocab
         # target word embedding
         self.t_embedding = nn.Embedding(
@@ -29,11 +29,19 @@ class Model(nn.Module):
         target_embeddings = target_embeddings.view(
             n_examples, 1, n_dimensions
         )  # batch * 1 * N
-        context_embeddings = self.c_embedding(context)
-        context_embeddings = context_embeddings.permute(0, 2, 1)
 
-        dots = target_embeddings.bmm(context_embeddings)
-        dots.view(dots.shape[0], dots.shape[2])
+        # negative sampling
+        context_embeddings = self.c_embedding(
+            context
+        )  # batch * context size * N
+        context_embeddings = context_embeddings.permute(
+            0, 2, 1
+        )  # batch * N * context size
+
+        dots = target_embeddings.bmm(
+            context_embeddings
+        )  # batch * 1 * context size
+        dots = dots.view(dots.shape[0], dots.shape[2])  # batch * context size
         return dots
 
     def normalize_embeddings(self):

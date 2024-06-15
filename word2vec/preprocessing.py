@@ -1,5 +1,5 @@
 from vocab import Vocab
-from word2vec.params import Word2VecParams
+from params import Word2VecParams
 import numpy as np
 import random
 import torch
@@ -94,7 +94,9 @@ class NegativeSampler:
         }
 
         ns_array = []
-        for word, freq in tqdm.tqdm(frequency_dict_scaled.items()):
+        for word, freq in tqdm.tqdm(
+            frequency_dict_scaled.items(), "Creating negative sampling array"
+        ):
             ns_array = ns_array + [word] * freq
         return ns_array
 
@@ -102,3 +104,5 @@ class NegativeSampler:
         samples = []
         for _ in range(n_batches):
             samples.append(random.sample(self.ns_array, n_samples))
+        samples = torch.as_tensor(np.array(samples))
+        return samples

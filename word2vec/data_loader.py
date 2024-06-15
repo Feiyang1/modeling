@@ -1,6 +1,6 @@
 import os
 import torchdata.datapipes as dp
-from functools import partial
+from torchtext.data import to_map_style_dataset
 
 _EXTRACTED_FILES = {
     "train": os.path.join("wikitext-103", "wiki.train.tokens"),
@@ -13,7 +13,7 @@ def load_wikitext103(split):
     file_path = os.path.join(_DATASETS_DIR, _EXTRACTED_FILES[split])
     print(file_path)
     data_pipe = dp.iter.IterableWrapper([file_path])
-    data_pipe = dp.iter.FileOpener(data_pipe, mode="rb")
+    data_pipe = dp.iter.FileOpener(data_pipe, encoding="utf-8")
     # data_pipe = dp.iter.FileOpener(data_pipe, encoding="utf-8")
     return (
         data_pipe.readlines(strip_newline=False, return_path=False)
@@ -21,3 +21,11 @@ def load_wikitext103(split):
         .set_shuffle(False)
         .sharding_filter()
     )
+
+def get_data():
+    train_iter = load_wikitext103(split="train")
+    train_iter = to_map_style_dataset(train_iter)
+    valid_iter = load_wikitext103(split="test")
+    valid_iter = to_map_style_dataset(valid_iter)
+
+    return train_iter, valid_iter
